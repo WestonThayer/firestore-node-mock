@@ -1,3 +1,5 @@
+import { Mock } from 'node:test';
+
 export class Timestamp {
   constructor(seconds: number, nanoseconds: number);
 
@@ -12,9 +14,9 @@ export class Timestamp {
 }
 
 export const mocks: {
-  mockTimestampToDate: jest.Mock;
-  mockTimestampToMillis: jest.Mock;
-  mockTimestampFromDate: jest.Mock;
-  mockTimestampFromMillis: jest.Mock;
-  mockTimestampNow: jest.Mock;
+  mockTimestampToDate: Mock<any>;
+  mockTimestampToMillis: Mock<any>;
+  mockTimestampFromDate: Mock<any>;
+  mockTimestampFromMillis: Mock<any>;
+  mockTimestampNow: Mock<any>;
 };

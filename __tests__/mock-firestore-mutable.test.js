@@ -1,10 +1,12 @@
-const { FakeFirestore } = require('firestore-jest-mock');
-const { mockCollection, mockDoc } = require('firestore-jest-mock/mocks/firestore');
+import { describe, test, beforeEach } from 'node:test';
+import assert from 'node:assert';
+import { FakeFirestore } from '../index.js';
+import { mockCollection, mockDoc } from '../mocks/firestore.js';
 
 describe('database mutations', () => {
   beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+    mockCollection.mock.resetCalls();
+    mockDoc.mock.resetCalls();
   });
 
   // db is a fn, instead a shared variable to enforce sandboxing data on each test.
@@ -49,12 +51,19 @@ describe('database mutations', () => {
         food: 'omnivore',
         special: 'tunneling',
       });
-    expect(mockCollection).toHaveBeenCalledWith('dragons');
-    expect(mockDoc).toHaveBeenCalledWith('whisperingDeath');
+    // Note: mockCollection is called multiple times.
+    // animals, dragons.
+    // check that it was called with 'dragons' at some point?
+    // original: expect(mockCollection).toHaveBeenCalledWith('dragons');
+    // We can iterate calls.
+    const calls = mockCollection.mock.calls.map(c => c.arguments[0]);
+    assert.ok(calls.includes('dragons'));
+    const docCalls = mockDoc.mock.calls.map(c => c.arguments[0]);
+    assert.ok(docCalls.includes('whisperingDeath'));
 
     const doc = await mdb.doc('animals/fantasy/dragons/whisperingDeath').get();
-    expect(doc.exists).toBe(true);
-    expect(doc.id).toBe('whisperingDeath');
+    assert.strictEqual(doc.exists, true);
+    assert.strictEqual(doc.id, 'whisperingDeath');
   });
 
   test('it correctly merges data on update', async () => {
@@ -62,8 +71,8 @@ describe('database mutations', () => {
     const homer = mdb.collection('characters').doc('homer');
     await homer.set({ occupation: 'Astronaut' }, { merge: true });
     const doc = await homer.get();
-    expect(doc.data().name).toEqual('Homer');
-    expect(doc.data().occupation).toEqual('Astronaut');
+    assert.strictEqual(doc.data().name, 'Homer');
+    assert.strictEqual(doc.data().occupation, 'Astronaut');
   });
 
   test('it correctly overwrites data on set', async () => {
@@ -71,8 +80,8 @@ describe('database mutations', () => {
     const homer = mdb.collection('characters').doc('homer');
     await homer.set({ occupation: 'Astronaut' });
     const doc = await homer.get();
-    expect(doc.data().name).toBeUndefined();
-    expect(doc.data().occupation).toEqual('Astronaut');
+    assert.strictEqual(doc.data().name, undefined);
+    assert.strictEqual(doc.data().occupation, 'Astronaut');
   });
 
   test('it can batch appropriately', async () => {
@@ -86,11 +95,11 @@ describe('database mutations', () => {
       .commit();
 
     const homerData = (await homer.get()).data();
-    expect(homerData.name).toEqual('Homer');
-    expect(homerData.drink).toEqual('duff');
+    assert.strictEqual(homerData.name, 'Homer');
+    assert.strictEqual(homerData.drink, 'duff');
     const krustyData = (await krusty.get()).data();
-    expect(krustyData.name).toBeUndefined();
-    expect(krustyData.causeOfDeath).toEqual('Simian homicide');
+    assert.strictEqual(krustyData.name, undefined);
+    assert.strictEqual(krustyData.causeOfDeath, 'Simian homicide');
   });
 
   test('it can add to collection', async () => {
@@ -102,13 +111,13 @@ describe('database mutations', () => {
     });
 
     const test = await newDoc1.get();
-    expect(test.exists).toBe(true);
+    assert.strictEqual(test.exists, true);
 
     const newDoc2 = await col.add({
       name: 'Lisa',
       occupation: 'President-in-waiting',
       address: { street: '742 Evergreen Terrace' },
     });
-    expect(newDoc2.id).not.toEqual(newDoc1.id);
+    assert.notStrictEqual(newDoc2.id, newDoc1.id);
   });
 });

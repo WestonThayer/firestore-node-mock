@@ -1,3 +1,5 @@
+import { Mock } from 'node:test';
+
 type FieldValueType = 'arrayUnion' | 'arrayRemove' | 'increment' | 'serverTimestamp' | 'delete';
 
 export class FieldValue {
@@ -13,9 +15,9 @@ export class FieldValue {
 }
 
 export const mocks: {
-  mockArrayUnionFieldValue: jest.Mock;
-  mockArrayRemoveFieldValue: jest.Mock;
-  mockDeleteFieldValue: jest.Mock;
-  mockIncrementFieldValue: jest.Mock;
-  mockServerTimestampFieldValue: jest.Mock;
+  mockArrayUnionFieldValue: Mock<any>;
+  mockArrayRemoveFieldValue: Mock<any>;
+  mockDeleteFieldValue: Mock<any>;
+  mockIncrementFieldValue: Mock<any>;
+  mockServerTimestampFieldValue: Mock<any>;
 };

@@ -1,5 +1,6 @@
-import type { Query } from './query';
-import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot';
+import { Mock } from 'node:test';
+import type { Query } from './query.js';
+import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot.js';
 
 export class Transaction {
   getAll(...refsOrReadOptions: Array<Query | Record<string, never>>): Promise<Array<MockedQuerySnapshot>>;
@@ -11,11 +12,11 @@ export class Transaction {
 }
 
 export const mocks: {
-  mockGetAll: jest.Mock;
-  mockGetAllTransaction: jest.Mock;
-  mockGetTransaction: jest.Mock;
-  mockSetTransaction: jest.Mock;
-  mockUpdateTransaction: jest.Mock;
-  mockDeleteTransaction: jest.Mock;
-  mockCreateTransaction: jest.Mock;
+  mockGetAll: Mock<any>;
+  mockGetAllTransaction: Mock<any>;
+  mockGetTransaction: Mock<any>;
+  mockSetTransaction: Mock<any>;
+  mockUpdateTransaction: Mock<any>;
+  mockDeleteTransaction: Mock<any>;
+  mockCreateTransaction: Mock<any>;
 };

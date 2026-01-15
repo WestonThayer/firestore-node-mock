@@ -1,4 +1,4 @@
-import type { FakeFirestore, FakeFirestoreDatabase } from '../firestore';
+import type { FakeFirestore, FakeFirestoreDatabase } from '../firestore.js';
 
 export type DocumentData = { [field: string]: unknown };
 

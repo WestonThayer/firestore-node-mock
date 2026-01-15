@@ -1,6 +1,6 @@
-const buildDocFromHash = require('./buildDocFromHash');
+import buildDocFromHash from './buildDocFromHash.js';
 
-module.exports = function buildQuerySnapShot(requestedRecords, filters, selectFields) {
+export default function buildQuerySnapShot(requestedRecords, filters, selectFields) {
   const definiteRecords = requestedRecords.filter(rec => !!rec);
   const results = _filteredDocuments(definiteRecords, filters);
   const docs = results.map(doc => buildDocFromHash(doc, 'abc123', selectFields));
@@ -20,12 +20,12 @@ module.exports = function buildQuerySnapShot(requestedRecords, filters, selectFi
 
 /**
  * @typedef DocumentHash
- * @type {import('./buildDocFromHash').DocumentHash}
+ * @type {import('./buildDocFromHash.js').DocumentHash}
  */
 
 /**
  * @typedef Comparator
- * @type {import('./buildQuerySnapShot').Comparator}
+ * @type {import('./buildQuerySnapShot.js').Comparator}
  */
 
 /**
@@ -35,7 +35,7 @@ module.exports = function buildQuerySnapShot(requestedRecords, filters, selectFi
  * @param {Array<{ key: string; comp: Comparator; value: unknown }>=} filters The filters to apply.
  * If no filters are provided, then the records array is returned as-is.
  *
- * @returns {Array<import('./buildDocFromHash').DocumentHash>} The filtered documents.
+ * @returns {Array<import('./buildDocFromHash.js').DocumentHash>} The filtered documents.
  */
 function _filteredDocuments(records, filters) {
   if (!filters || !Array.isArray(filters) || filters.length === 0) {
@@ -303,3 +303,4 @@ function getValueByPath(record, path) {
   const keys = path.split('.');
   return keys.reduce((nestedObject = {}, key) => nestedObject[key], record);
 }
+

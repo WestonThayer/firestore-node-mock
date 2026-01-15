@@ -1,10 +1,12 @@
-const { FakeFirestore } = require('firestore-jest-mock');
-const { mockCollection, mockDoc } = require('firestore-jest-mock/mocks/firestore');
+import { describe, test, beforeEach } from 'node:test';
+import assert from 'node:assert';
+import { FakeFirestore } from '../index.js';
+import { mockCollection, mockDoc } from '../mocks/firestore.js';
 
 describe('Firestore options', () => {
   beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+    mockCollection.mock.resetCalls();
+    mockDoc.mock.resetCalls();
   });
 
   const database = {
@@ -40,19 +42,18 @@ describe('Firestore options', () => {
 
   describe('Single records versus queries', () => {
     test('it can fetch a single record', async () => {
-      expect.assertions(7);
       const record = await db
         .collection('characters')
         .doc('krusty')
         .get();
-      expect(mockCollection).toHaveBeenCalledWith('characters');
-      expect(mockDoc).toHaveBeenCalledWith('krusty');
-      expect(record.exists).toBe(true);
-      expect(record.id).toBe('krusty');
+      assert.deepStrictEqual(mockCollection.mock.calls[0].arguments, ['characters']);
+      assert.deepStrictEqual(mockDoc.mock.calls[0].arguments, ['krusty']);
+      assert.strictEqual(record.exists, true);
+      assert.strictEqual(record.id, 'krusty');
       const data = record.data();
-      expect(data).toHaveProperty('name', 'Krusty');
-      expect(data).toHaveProperty('occupation', 'clown');
-      expect(data).toHaveProperty('id', 'krusty');
+      assert.strictEqual(data.name, 'Krusty');
+      assert.strictEqual(data.occupation, 'clown');
+      assert.strictEqual(data.id, 'krusty');
     });
   });
 });

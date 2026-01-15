@@ -1,14 +1,22 @@
-const mockInitializeApp = jest.fn();
-const mockCert = jest.fn();
+import { mock } from 'node:test';
+import { createRequire } from 'node:module';
+import { FakeFirestore } from './firestore.js';
+import { FakeAuth } from './auth.js';
+import defaultOptions from './helpers/defaultMockOptions.js';
 
-const defaultOptions = require('./helpers/defaultMockOptions');
+const require = createRequire(import.meta.url);
 
-const firebaseStub = (overrides, options = defaultOptions) => {
-  const { FakeFirestore, FakeAuth } = require('firestore-jest-mock');
+export const mockInitializeApp = mock.fn();
+export const mockCert = mock.fn();
 
+let activeOverrides = {};
+let activeOptions = defaultOptions;
+const mockedModules = new Set();
+
+export const firebaseStub = () => {
   // Prepare namespaced classes
   function firestoreConstructor() {
-    return new FakeFirestore(overrides.database, options);
+    return new FakeFirestore(activeOverrides.database, activeOptions);
   }
 
   firestoreConstructor.Query = FakeFirestore.Query;
@@ -31,36 +39,41 @@ const firebaseStub = (overrides, options = defaultOptions) => {
     },
 
     auth() {
-      return new FakeAuth(overrides.currentUser);
+      return new FakeAuth(activeOverrides.currentUser);
     },
 
     firestore: firestoreConstructor,
   };
 };
 
-const mockFirebase = (overrides = {}, options = defaultOptions) => {
+export const mockFirebase = (overrides = {}, options = defaultOptions) => {
+  activeOverrides = overrides;
+  activeOptions = options;
+
   const moduleFound = 
-    mockModuleIfFound('firebase', overrides, options) |
-    mockModuleIfFound('firebase-admin', overrides, options);
+    mockModuleIfFound('firebase') |
+    mockModuleIfFound('firebase-admin');
   
-  if (!moduleFound) {
+  if (!moduleFound && mockedModules.size === 0) {
     console.info(`Neither 'firebase' nor 'firebase-admin' modules found, mocking skipped.`);
   }
 };
 
-function mockModuleIfFound(moduleName, overrides, options) {
+function mockModuleIfFound(moduleName) {
+  if (mockedModules.has(moduleName)) {
+    return true;
+  }
   try {
     require.resolve(moduleName);
-    jest.doMock(moduleName, () => firebaseStub(overrides, options));
+    const stub = firebaseStub();
+    mock.module(moduleName, {
+      defaultExport: stub,
+      namedExports: stub,
+    });
+    mockedModules.add(moduleName);
     return true;
   } catch (e) {
+    // console.error(`Error mocking ${moduleName}:`, e);
     return false;
   }
 }
-
-module.exports = {
-  firebaseStub,
-  mockFirebase,
-  mockInitializeApp,
-  mockCert,
-};

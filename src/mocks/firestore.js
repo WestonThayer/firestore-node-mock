@@ -1,40 +1,44 @@
-const mockCollectionGroup = jest.fn();
-const mockBatch = jest.fn();
-const mockRunTransaction = jest.fn();
-const mockRecursiveDelete = jest.fn();
+// @ts-nocheck
+import { mock } from 'node:test';
 
-const mockSettings = jest.fn();
-const mockUseEmulator = jest.fn();
-const mockCollection = jest.fn();
-const mockDoc = jest.fn();
-const mockCreate = jest.fn();
-const mockUpdate = jest.fn();
-const mockSet = jest.fn();
-const mockAdd = jest.fn();
-const mockDelete = jest.fn();
-const mockListDocuments = jest.fn();
-const mockListCollections = jest.fn();
+import * as timestamp from './timestamp.js';
+import * as fieldValue from './fieldValue.js';
+import * as query from './query.js';
+import * as transaction from './transaction.js';
+import * as path from './path.js';
 
-const mockBatchDelete = jest.fn();
-const mockBatchCommit = jest.fn();
-const mockBatchUpdate = jest.fn();
-const mockBatchSet = jest.fn();
-const mockBatchCreate = jest.fn();
+import buildDocFromHash from './helpers/buildDocFromHash.js';
+import buildQuerySnapShot from './helpers/buildQuerySnapShot.js';
 
-const mockOnSnapShot = jest.fn();
+export const mockCollectionGroup = mock.fn();
+export const mockBatch = mock.fn();
+export const mockRunTransaction = mock.fn();
+export const mockRecursiveDelete = mock.fn();
 
-const timestamp = require('./timestamp');
-const fieldValue = require('./fieldValue');
-const query = require('./query');
-const transaction = require('./transaction');
-const path = require('./path');
+export const mockSettings = mock.fn();
+export const mockUseEmulator = mock.fn();
+export const mockCollection = mock.fn();
+export const mockDoc = mock.fn();
+export const mockCreate = mock.fn();
+export const mockUpdate = mock.fn();
+export const mockSet = mock.fn();
+export const mockAdd = mock.fn();
+export const mockDelete = mock.fn();
+export const mockListDocuments = mock.fn();
+export const mockListCollections = mock.fn();
 
-const buildDocFromHash = require('./helpers/buildDocFromHash');
-const buildQuerySnapShot = require('./helpers/buildQuerySnapShot');
+export const mockBatchDelete = mock.fn();
+export const mockBatchCommit = mock.fn();
+export const mockBatchUpdate = mock.fn();
+export const mockBatchSet = mock.fn();
+export const mockBatchCreate = mock.fn();
+
+export const mockOnSnapShot = mock.fn();
 
 const _randomId = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString();
 
-class FakeFirestore {
+// @ts-ignore
+export class FakeFirestore {
   constructor(stubbedDatabase = {}, options = {}) {
     this.database = timestamp.convertTimestamps(stubbedDatabase);
     this.query = new query.Query('', this);
@@ -57,6 +61,9 @@ class FakeFirestore {
     return Promise.all(transaction.mocks.mockGetAll(...params) || [...params].map(r => r.get()));
   }
 
+  /**
+   * @returns {import('./firestore.js').FirestoreBatch}
+   */
   batch() {
     mockBatch(...arguments);
     return {
@@ -250,7 +257,8 @@ FakeFirestore.FieldPath = path.FieldPath;
  * ============
  */
 
-FakeFirestore.DocumentReference = class {
+/** @type {typeof import('./firestore.js').FakeFirestore.DocumentReference} */
+FakeFirestore.DocumentReference = class DocumentReference {
   constructor(id, parent) {
     this.id = id;
     this.parent = parent;
@@ -439,6 +447,9 @@ FakeFirestore.DocumentReference = class {
     }
   }
 
+  /**
+   * @returns {DocumentReference}
+   */
   withConverter() {
     query.mocks.mockWithConverter(...arguments);
     return this;
@@ -451,7 +462,7 @@ FakeFirestore.DocumentReference = class {
  * ============
  */
 
-FakeFirestore.CollectionReference = class extends FakeFirestore.Query {
+FakeFirestore.CollectionReference = class CollectionReference extends FakeFirestore.Query {
   constructor(id, parent, firestore) {
     super(id, firestore || parent.firestore);
 
@@ -557,31 +568,43 @@ FakeFirestore.CollectionReference = class extends FakeFirestore.Query {
   }
 };
 
-module.exports = {
-  FakeFirestore,
-  mockBatch,
-  mockRunTransaction,
-  mockRecursiveDelete,
-  mockCollection,
-  mockCollectionGroup,
-  mockDoc,
-  mockAdd,
-  mockDelete,
-  mockCreate,
-  mockUpdate,
-  mockSet,
-  mockSettings,
-  mockUseEmulator,
-  mockBatchDelete,
-  mockBatchCommit,
-  mockBatchUpdate,
-  mockBatchSet,
-  mockBatchCreate,
-  mockOnSnapShot,
-  mockListDocuments,
-  mockListCollections,
-  ...query.mocks,
-  ...transaction.mocks,
-  ...fieldValue.mocks,
-  ...timestamp.mocks,
-};
+// Re-exporting mocks from other modules for convenience (keeping backward compatibility with original structure)
+export const {
+  mockGet,
+  mockSelect,
+  mockWhere,
+  mockLimit,
+  mockOrderBy,
+  mockOffset,
+  mockStartAfter,
+  mockStartAt,
+  mockQueryOnSnapshot,
+  mockQueryOnSnapshotUnsubscribe,
+  mockWithConverter
+} = query.mocks;
+
+export const {
+  mockGetAll,
+  mockGetAllTransaction,
+  mockGetTransaction,
+  mockSetTransaction,
+  mockUpdateTransaction,
+  mockDeleteTransaction,
+  mockCreateTransaction
+} = transaction.mocks;
+
+export const {
+  mockArrayUnionFieldValue,
+  mockArrayRemoveFieldValue,
+  mockDeleteFieldValue,
+  mockIncrementFieldValue,
+  mockServerTimestampFieldValue
+} = fieldValue.mocks;
+
+export const {
+  mockTimestampToDate,
+  mockTimestampToMillis,
+  mockTimestampFromDate,
+  mockTimestampFromMillis,
+  mockTimestampNow
+} = timestamp.mocks;

@@ -1,5 +1,6 @@
-import type { FirebaseUser, FakeAuth } from './auth';
-import type { FakeFirestore } from './firestore';
+import { Mock } from 'node:test';
+import type { FirebaseUser, FakeAuth } from './auth.js';
+import type { FakeFirestore } from './firestore.js';
 
 export interface DatabaseDocument {
   id: string;
@@ -18,13 +19,13 @@ export interface StubOverrides {
   currentUser?: FirebaseUser;
 }
 
-type DefaultOptions = typeof import('./helpers/defaultMockOptions');
+type DefaultOptions = typeof import('./helpers/defaultMockOptions.js');
 export interface StubOptions extends Partial<DefaultOptions> {}
 
 export interface FirebaseMock {
-  initializeApp: jest.Mock;
+  initializeApp: Mock<any>;
   credential: {
-    cert: jest.Mock;
+    cert: Mock<any>;
   };
   auth(): FakeAuth;
   firestore(): FakeFirestore;
@@ -32,5 +33,5 @@ export interface FirebaseMock {
 
 export const firebaseStub: (overrides?: StubOverrides, options?: StubOptions) => FirebaseMock;
 export const mockFirebase: (overrides?: StubOverrides, options?: StubOptions) => void;
-export const mockInitializeApp: jest.Mock;
-export const mockCert: jest.Mock;
+export const mockInitializeApp: Mock<any>;
+export const mockCert: Mock<any>;

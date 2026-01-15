@@ -1,5 +1,5 @@
-import type { StubOverrides, StubOptions } from './firebase';
-import type { FakeFirestore } from './firestore';
+import type { StubOverrides, StubOptions } from './firebase.js';
+import type { FakeFirestore } from './firestore.js';
 
 declare class Firestore extends FakeFirestore {
   constructor();

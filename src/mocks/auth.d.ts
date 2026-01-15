@@ -1,16 +1,18 @@
-export const mockCreateUserWithEmailAndPassword: jest.Mock;
-export const mockDeleteUser: jest.Mock;
-export const mockSendVerificationEmail: jest.Mock;
-export const mockSignInWithEmailAndPassword: jest.Mock;
-export const mockSendPasswordResetEmail: jest.Mock;
-export const mockVerifyIdToken: jest.Mock;
-export const mockGetUser: jest.Mock;
-export const mockCreateCustomToken: jest.Mock;
-export const mockSetCustomUserClaims: jest.Mock;
-export const mockSignOut: jest.Mock;
+import { Mock } from 'node:test';
+
+export const mockCreateUserWithEmailAndPassword: Mock<any>;
+export const mockDeleteUser: Mock<any>;
+export const mockSendVerificationEmail: Mock<any>;
+export const mockSignInWithEmailAndPassword: Mock<any>;
+export const mockSendPasswordResetEmail: Mock<any>;
+export const mockVerifyIdToken: Mock<any>;
+export const mockGetUser: Mock<any>;
+export const mockCreateCustomToken: Mock<any>;
+export const mockSetCustomUserClaims: Mock<any>;
+export const mockSignOut: Mock<any>;
 
 // FIXME: We should decide whether this should be exported from auth or firestore
-export const mockUseEmulator: jest.Mock;
+export const mockUseEmulator: Mock<any>;
 
 export interface FirebaseUser {}
 

@@ -1,4 +1,4 @@
-import type { MockedDocument, DocumentHash } from './buildDocFromHash';
+import type { MockedDocument, DocumentHash } from './buildDocFromHash.js';
 
 export type Comparator = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'not-in' | 'array-contains-any';
 

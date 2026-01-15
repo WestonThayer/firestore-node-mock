@@ -1,16 +1,14 @@
 {
   "root": true,
   "ignorePatterns": ["mocks", "index.*", "dist", "node_modules"],
-  "extends": ["plugin:jest/recommended"],
-  "plugins": ["jest"],
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaVersion": 2022
   },
   "env": {
     "browser": true,
     "node": true,
-    "es6": true,
-    "jest": true
+    "es2020": true
   },
   "overrides": [
     {

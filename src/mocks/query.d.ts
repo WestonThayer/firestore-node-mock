@@ -1,5 +1,6 @@
-import type { FakeFirestore } from './firestore';
-import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot';
+import { Mock } from 'node:test';
+import type { FakeFirestore } from './firestore.js';
+import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot.js';
 
 export class Query {
   constructor(collectionName: string, firestore: typeof FakeFirestore);
@@ -17,15 +18,15 @@ export class Query {
 }
 
 export const mocks: {
-  mockGet: jest.Mock,
-  mockSelect: jest.Mock,
-  mockWhere: jest.Mock,
-  mockLimit: jest.Mock,
-  mockOrderBy: jest.Mock,
-  mockOffset: jest.Mock,
-  mockStartAfter: jest.Mock,
-  mockStartAt: jest.Mock,
-  mockQueryOnSnapshot: jest.Mock,
-  mockQueryOnSnapshotUnsubscribe: jest.Mock,
-  mockWithConverter: jest.Mock,
+  mockGet: Mock<any>,
+  mockSelect: Mock<any>,
+  mockWhere: Mock<any>,
+  mockLimit: Mock<any>,
+  mockOrderBy: Mock<any>,
+  mockOffset: Mock<any>,
+  mockStartAfter: Mock<any>,
+  mockStartAt: Mock<any>,
+  mockQueryOnSnapshot: Mock<any>,
+  mockQueryOnSnapshotUnsubscribe: Mock<any>,
+  mockWithConverter: Mock<any>,
 };

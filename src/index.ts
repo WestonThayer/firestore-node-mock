@@ -1,5 +1,5 @@
-export { FakeFirestore } from './mocks/firestore';
-export { FakeAuth } from './mocks/auth';
-export { mockFirebase } from './mocks/firebase';
-export { mockGoogleCloudFirestore } from './mocks/googleCloudFirestore';
-export { mockReactNativeFirestore } from './mocks/reactNativeFirebaseFirestore';
+export { FakeFirestore } from './mocks/firestore.js';
+export { FakeAuth } from './mocks/auth.js';
+export { mockFirebase } from './mocks/firebase.js';
+export { mockGoogleCloudFirestore } from './mocks/googleCloudFirestore.js';
+export { mockReactNativeFirestore } from './mocks/reactNativeFirebaseFirestore.js';

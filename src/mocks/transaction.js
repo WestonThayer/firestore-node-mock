@@ -1,12 +1,14 @@
-const mockGetAll = jest.fn();
-const mockGetAllTransaction = jest.fn();
-const mockGetTransaction = jest.fn();
-const mockSetTransaction = jest.fn();
-const mockUpdateTransaction = jest.fn();
-const mockDeleteTransaction = jest.fn();
-const mockCreateTransaction = jest.fn();
+import { mock } from 'node:test';
 
-class Transaction {
+export const mockGetAll = mock.fn();
+export const mockGetAllTransaction = mock.fn();
+export const mockGetTransaction = mock.fn();
+export const mockSetTransaction = mock.fn();
+export const mockUpdateTransaction = mock.fn();
+export const mockDeleteTransaction = mock.fn();
+export const mockCreateTransaction = mock.fn();
+
+export class Transaction {
   getAll(...refsOrReadOptions) {
     mockGetAll(...arguments);
     mockGetAllTransaction(...arguments);
@@ -49,15 +51,12 @@ class Transaction {
   }
 }
 
-module.exports = {
-  Transaction,
-  mocks: {
-    mockGetAll,
-    mockGetAllTransaction,
-    mockGetTransaction,
-    mockSetTransaction,
-    mockUpdateTransaction,
-    mockDeleteTransaction,
-    mockCreateTransaction,
-  },
+export const mocks = {
+  mockGetAll,
+  mockGetAllTransaction,
+  mockGetTransaction,
+  mockSetTransaction,
+  mockUpdateTransaction,
+  mockDeleteTransaction,
+  mockCreateTransaction,
 };

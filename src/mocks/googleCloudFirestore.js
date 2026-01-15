@@ -1,8 +1,11 @@
-const defaultOptions = require('./helpers/defaultMockOptions');
+import { mock } from 'node:test';
+import { createRequire } from 'node:module';
+import { FakeFirestore } from './firestore.js';
+import defaultOptions from './helpers/defaultMockOptions.js';
 
-const firestoreStub = (overrides, options = defaultOptions) => {
-  const { FakeFirestore } = require('firestore-jest-mock');
+const require = createRequire(import.meta.url);
 
+export const firestoreStub = (overrides, options = defaultOptions) => {
   class Firestore extends FakeFirestore {
     constructor() {
       super(overrides.database, options);
@@ -21,21 +24,20 @@ const firestoreStub = (overrides, options = defaultOptions) => {
   };
 };
 
-const mockGoogleCloudFirestore = (overrides = {}, options = defaultOptions) => {
+export const mockGoogleCloudFirestore = (overrides = {}, options = defaultOptions) => {
   mockModuleIfFound('@google-cloud/firestore', overrides, options);
 };
 
 function mockModuleIfFound(moduleName, overrides, options) {
   try {
     require.resolve(moduleName);
-    jest.doMock(moduleName, () => firestoreStub(overrides, options));
+    const stub = firestoreStub(overrides, options);
+    mock.module(moduleName, {
+      defaultExport: stub,
+      namedExports: stub,
+    });
   } catch (e) {
     // eslint-disable-next-line no-console
     console.info(`Module ${moduleName} not found, mocking skipped.`);
   }
 }
-
-module.exports = {
-  firestoreStub,
-  mockGoogleCloudFirestore,
-};

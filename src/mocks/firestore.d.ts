@@ -1,11 +1,12 @@
-import type { FieldValue } from './fieldValue';
-import type { Query } from './query';
-import type { Timestamp } from './timestamp';
-import type { Transaction } from './transaction';
-import type { FieldPath } from './path';
+import { Mock } from 'node:test';
+import type { FieldValue } from './fieldValue.js';
+import type { Query } from './query.js';
+import type { Timestamp } from './timestamp.js';
+import type { Transaction } from './transaction.js';
+import type { FieldPath } from './path.js';
 
-import type { MockedDocument, DocumentData } from './helpers/buildDocFromHash';
-import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot';
+import type { MockedDocument, DocumentData } from './helpers/buildDocFromHash.js';
+import type { MockedQuerySnapshot } from './helpers/buildQuerySnapShot.js';
 
 interface DatabaseDocument extends DocumentData {
   id: string;
@@ -118,63 +119,63 @@ declare class CollectionReference extends FakeFirestore.Query {
 }
 
 // Mocks exported from this module
-export const mockBatch: jest.Mock;
-export const mockRunTransaction: jest.Mock;
-export const mockRecursiveDelete: jest.Mock;
+export const mockBatch: Mock<any>;
+export const mockRunTransaction: Mock<any>;
+export const mockRecursiveDelete: Mock<any>;
 
-export const mockCollection: jest.Mock;
-export const mockCollectionGroup: jest.Mock;
-export const mockDoc: jest.Mock;
-export const mockCreate: jest.Mock;
-export const mockUpdate: jest.Mock;
-export const mockSet: jest.Mock;
-export const mockAdd: jest.Mock;
-export const mockDelete: jest.Mock;
-export const mockSettings: jest.Mock;
+export const mockCollection: Mock<any>;
+export const mockCollectionGroup: Mock<any>;
+export const mockDoc: Mock<any>;
+export const mockCreate: Mock<any>;
+export const mockUpdate: Mock<any>;
+export const mockSet: Mock<any>;
+export const mockAdd: Mock<any>;
+export const mockDelete: Mock<any>;
+export const mockSettings: Mock<any>;
 
 // FIXME: We should decide whether this should be exported from auth or firestore
-export const mockUseEmulator: jest.Mock;
-export const mockListDocuments: jest.Mock;
+export const mockUseEmulator: Mock<any>;
+export const mockListDocuments: Mock<any>;
 
-export const mockBatchDelete: jest.Mock;
-export const mockBatchCommit: jest.Mock;
-export const mockBatchUpdate: jest.Mock;
-export const mockBatchSet: jest.Mock;
-export const mockBatchCreate: jest.Mock;
+export const mockBatchDelete: Mock<any>;
+export const mockBatchCommit: Mock<any>;
+export const mockBatchUpdate: Mock<any>;
+export const mockBatchSet: Mock<any>;
+export const mockBatchCreate: Mock<any>;
 
-export const mockOnSnapShot: jest.Mock;
+export const mockOnSnapShot: Mock<any>;
 
 // Mocks exported from FieldValue
-export const mockArrayUnionFieldValue: jest.Mock;
-export const mockArrayRemoveFieldValue: jest.Mock;
-export const mockDeleteFieldValue: jest.Mock;
-export const mockIncrementFieldValue: jest.Mock;
-export const mockServerTimestampFieldValue: jest.Mock;
+export const mockArrayUnionFieldValue: Mock<any>;
+export const mockArrayRemoveFieldValue: Mock<any>;
+export const mockDeleteFieldValue: Mock<any>;
+export const mockIncrementFieldValue: Mock<any>;
+export const mockServerTimestampFieldValue: Mock<any>;
 
 // Mocks exported from Query
-export const mockGet: jest.Mock;
-export const mockWhere: jest.Mock;
-export const mockLimit: jest.Mock;
-export const mockOrderBy: jest.Mock;
-export const mockOffset: jest.Mock;
-export const mockStartAfter: jest.Mock;
-export const mockStartAt: jest.Mock;
-export const mockQueryOnSnapshot: jest.Mock;
-export const mockQueryOnSnapshotUnsubscribe: jest.Mock;
-export const mockWithConverter: jest.Mock;
+export const mockGet: Mock<any>;
+export const mockWhere: Mock<any>;
+export const mockLimit: Mock<any>;
+export const mockOrderBy: Mock<any>;
+export const mockOffset: Mock<any>;
+export const mockStartAfter: Mock<any>;
+export const mockStartAt: Mock<any>;
+export const mockQueryOnSnapshot: Mock<any>;
+export const mockQueryOnSnapshotUnsubscribe: Mock<any>;
+export const mockWithConverter: Mock<any>;
 
 // Mocks exported from Timestamp
-export const mockTimestampToDate: jest.Mock;
-export const mockTimestampToMillis: jest.Mock;
-export const mockTimestampFromDate: jest.Mock;
-export const mockTimestampFromMillis: jest.Mock;
-export const mockTimestampNow: jest.Mock;
+export const mockTimestampToDate: Mock<any>;
+export const mockTimestampToMillis: Mock<any>;
+export const mockTimestampFromDate: Mock<any>;
+export const mockTimestampFromMillis: Mock<any>;
+export const mockTimestampNow: Mock<any>;
 
 // Mocks exported from Transaction
-export const mockGetAll: jest.Mock;
-export const mockGetAllTransaction: jest.Mock;
-export const mockGetTransaction: jest.Mock;
-export const mockSetTransaction: jest.Mock;
-export const mockUpdateTransaction: jest.Mock;
-export const mockDeleteTransaction: jest.Mock;
-export const mockCreateTransaction: jest.Mock;
+export const mockGetAll: Mock<any>;
+export const mockGetAllTransaction: Mock<any>;
+export const mockGetTransaction: Mock<any>;
+export const mockSetTransaction: Mock<any>;
+export const mockUpdateTransaction: Mock<any>;
+export const mockDeleteTransaction: Mock<any>;
+export const mockCreateTransaction: Mock<any>;

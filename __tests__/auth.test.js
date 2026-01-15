@@ -1,6 +1,8 @@
-const { mockFirebase } = require('firestore-jest-mock');
-const { mockInitializeApp } = require('firestore-jest-mock/mocks/firebase');
-const {
+import { describe, test, beforeEach } from 'node:test';
+import assert from 'node:assert';
+import { mockFirebase } from '../index.js';
+import { mockInitializeApp } from '../mocks/firebase.js';
+import {
   mockCreateUserWithEmailAndPassword,
   mockSignInWithEmailAndPassword,
   mockSignOut,
@@ -11,7 +13,10 @@ const {
   mockCreateCustomToken,
   mockSetCustomUserClaims,
   mockUseEmulator,
-} = require('firestore-jest-mock/mocks/auth');
+} from '../mocks/auth.js';
+
+let firebase;
+let admin;
 
 describe('we can start a firebase application', () => {
   mockFirebase({
@@ -36,11 +41,26 @@ describe('we can start a firebase application', () => {
     currentUser: { uid: 'abc123', displayName: 'Bob' },
   });
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    this.firebase = require('firebase');
-    this.admin = require('firebase-admin');
-    this.firebase.initializeApp({
+  beforeEach(async () => {
+    mockInitializeApp.mock.resetCalls();
+    mockUseEmulator.mock.resetCalls();
+    mockCreateUserWithEmailAndPassword.mock.resetCalls();
+    mockSignInWithEmailAndPassword.mock.resetCalls();
+    mockSignOut.mock.resetCalls();
+    mockSendPasswordResetEmail.mock.resetCalls();
+    mockDeleteUser.mock.resetCalls();
+    mockVerifyIdToken.mock.resetCalls();
+    mockGetUser.mock.resetCalls();
+    mockCreateCustomToken.mock.resetCalls();
+    mockSetCustomUserClaims.mock.resetCalls();
+    
+    // Use dynamic import to pick up the mock
+    const fb = await import('firebase');
+    firebase = fb.default;
+    const adm = await import('firebase-admin');
+    admin = adm.default;
+    
+    firebase.initializeApp({
       apiKey: '### FIREBASE API KEY ###',
       authDomain: '### FIREBASE AUTH DOMAIN ###',
       projectId: '### CLOUD FIRESTORE PROJECT ID ###',
@@ -48,39 +68,35 @@ describe('we can start a firebase application', () => {
   });
 
   test('We can start an application', async () => {
-    this.firebase.auth();
-    expect(mockInitializeApp).toHaveBeenCalled();
+    firebase.auth();
+    assert.strictEqual(mockInitializeApp.mock.callCount() > 0, true);
   });
 
   test('We can use emulator', () => {
-    this.firebase.auth().useEmulator('http://localhost:9099');
-    expect(mockUseEmulator).toHaveBeenCalledWith('http://localhost:9099');
+    firebase.auth().useEmulator('http://localhost:9099');
+    assert.deepStrictEqual(mockUseEmulator.mock.calls[0].arguments, ['http://localhost:9099']);
   });
 
   describe('Client Auth Operations', () => {
     describe('Examples from documentation', () => {
       test('add a user', async () => {
-        expect.assertions(1);
-        await this.firebase.auth().createUserWithEmailAndPassword('sam', 'hill');
-        expect(mockCreateUserWithEmailAndPassword).toHaveBeenCalledWith('sam', 'hill');
+        await firebase.auth().createUserWithEmailAndPassword('sam', 'hill');
+        assert.deepStrictEqual(mockCreateUserWithEmailAndPassword.mock.calls[0].arguments, ['sam', 'hill']);
       });
 
       test('sign in', async () => {
-        expect.assertions(1);
-        await this.firebase.auth().signInWithEmailAndPassword('sam', 'hill');
-        expect(mockSignInWithEmailAndPassword).toHaveBeenCalledWith('sam', 'hill');
+        await firebase.auth().signInWithEmailAndPassword('sam', 'hill');
+        assert.deepStrictEqual(mockSignInWithEmailAndPassword.mock.calls[0].arguments, ['sam', 'hill']);
       });
 
       test('sign out', async () => {
-        expect.assertions(1);
-        await this.firebase.auth().signOut();
-        expect(mockSignOut).toHaveBeenCalled();
+        await firebase.auth().signOut();
+        assert.strictEqual(mockSignOut.mock.callCount() > 0, true);
       });
 
       test('send password reset email', async () => {
-        expect.assertions(1);
-        await this.firebase.auth().sendPasswordResetEmail('sam', null);
-        expect(mockSendPasswordResetEmail).toHaveBeenCalledWith('sam', null);
+        await firebase.auth().sendPasswordResetEmail('sam', null);
+        assert.deepStrictEqual(mockSendPasswordResetEmail.mock.calls[0].arguments, ['sam', null]);
       });
     });
   });
@@ -88,47 +104,41 @@ describe('we can start a firebase application', () => {
   describe('Admin Auth Operations', () => {
     describe('Examples from documentation', () => {
       test('delete a user', async () => {
-        expect.assertions(1);
-        await this.admin.auth().deleteUser('some-uid');
-        expect(mockDeleteUser).toHaveBeenCalledWith('some-uid');
+        await admin.auth().deleteUser('some-uid');
+        assert.deepStrictEqual(mockDeleteUser.mock.calls[0].arguments, ['some-uid']);
       });
 
       test('verify an ID token', async () => {
-        expect.assertions(1);
-        await this.admin.auth().verifyIdToken('token_string', true);
-        expect(mockVerifyIdToken).toHaveBeenCalledWith('token_string', true);
+        await admin.auth().verifyIdToken('token_string', true);
+        assert.deepStrictEqual(mockVerifyIdToken.mock.calls[0].arguments, ['token_string', true]);
       });
 
       test('get user object', async () => {
-        expect.assertions(1);
-        await this.admin.auth().getUser('some-uid');
-        expect(mockGetUser).toHaveBeenCalledWith('some-uid');
+        await admin.auth().getUser('some-uid');
+        assert.deepStrictEqual(mockGetUser.mock.calls[0].arguments, ['some-uid']);
       });
 
       test('get currentUser object', async () => {
-        expect.assertions(2);
-        const currentUser = await this.admin.auth().currentUser;
-        expect(currentUser.uid).toEqual('abc123');
-        expect(currentUser.data.displayName).toBe('Bob');
+        const currentUser = await admin.auth().currentUser;
+        assert.strictEqual(currentUser.uid, 'abc123');
+        assert.strictEqual(currentUser.data.displayName, 'Bob');
       });
 
       test('create custom token', async () => {
-        expect.assertions(2);
         const claims = {
           custom: true,
         };
-        const token = await this.admin.auth().createCustomToken('some-uid', claims);
-        expect(mockCreateCustomToken).toHaveBeenCalledWith('some-uid', claims);
-        expect(token).toEqual('');
+        const token = await admin.auth().createCustomToken('some-uid', claims);
+        assert.deepStrictEqual(mockCreateCustomToken.mock.calls[0].arguments, ['some-uid', claims]);
+        assert.strictEqual(token, '');
       });
 
       test('set custom user claims', async () => {
-        expect.assertions(1);
         const claims = {
           do: 'the thing',
         };
-        await this.admin.auth().setCustomUserClaims('some-uid', claims);
-        expect(mockSetCustomUserClaims).toHaveBeenCalledWith('some-uid', claims);
+        await admin.auth().setCustomUserClaims('some-uid', claims);
+        assert.deepStrictEqual(mockSetCustomUserClaims.mock.calls[0].arguments, ['some-uid', claims]);
       });
     });
 
@@ -151,22 +161,22 @@ describe('we can start a firebase application', () => {
           tokensValidAfterTime: undefined,
           uid,
         };
-        mockGetUser.mockReturnValueOnce(userRecord);
-        expect.assertions(2);
-        const result = await this.admin.auth().getUser(uid);
-        expect(mockGetUser).toHaveBeenCalledWith(uid);
-        expect(result).toStrictEqual(userRecord);
+        // Mock return value
+        mockGetUser.mock.mockImplementationOnce(() => userRecord);
+        
+        const result = await admin.auth().getUser(uid);
+        assert.deepStrictEqual(mockGetUser.mock.calls[0].arguments, [uid]);
+        assert.deepStrictEqual(result, userRecord);
       });
 
       test('mocking verify ID token to throw Error', async () => {
         const error = new Error('test');
-        expect.assertions(1);
-        mockVerifyIdToken.mockRejectedValueOnce(error);
-        const result = await this.admin
+        mockVerifyIdToken.mock.mockImplementationOnce(() => Promise.reject(error));
+        const result = await admin
           .auth()
           .verifyIdToken('token_string', true)
           .catch(err => err);
-        expect(result).toStrictEqual(error);
+        assert.strictEqual(result, error);
       });
     });
   });

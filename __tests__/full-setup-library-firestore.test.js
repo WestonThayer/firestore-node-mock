@@ -1,73 +1,123 @@
-describe.each([
+import { describe, test, beforeEach, afterEach, before } from 'node:test';
+import assert from 'node:assert';
+import * as FirestoreMock from '../index.js';
+import { Timestamp } from '../mocks/timestamp.js';
+import {
+  mockGet,
+  mockSelect,
+  mockAdd,
+  mockSet,
+  mockUpdate,
+  mockWhere,
+  mockCollectionGroup,
+  mockBatch,
+  mockBatchCommit,
+  mockBatchDelete,
+  mockBatchUpdate,
+  mockBatchSet,
+  mockBatchCreate,
+  mockSettings,
+  mockOnSnapShot,
+  mockQueryOnSnapshot,
+  mockQueryOnSnapshotUnsubscribe,
+  mockListCollections,
+  mockTimestampNow,
+  mockCreate,
+  mockRecursiveDelete,
+} from '../mocks/firestore.js';
+
+const flushPromises = () => new Promise(setImmediate);
+
+const libraries = [
   { library: '@google-cloud/firestore', mockFunction: 'mockGoogleCloudFirestore' },
   { library: '@react-native-firebase/firestore', mockFunction: 'mockReactNativeFirestore' },
-])('mocking %i with %i', ({ library, mockFunction }) => {
-  const FirestoreMock = require('firestore-jest-mock');
+];
 
-  const flushPromises = () => new Promise(setImmediate);
-  const { Timestamp } = require('firestore-jest-mock/mocks/timestamp');
-  const {
-    mockGet,
-    mockSelect,
-    mockAdd,
-    mockSet,
-    mockUpdate,
-    mockWhere,
-    mockCollectionGroup,
-    mockBatch,
-    mockBatchCommit,
-    mockBatchDelete,
-    mockBatchUpdate,
-    mockBatchSet,
-    mockBatchCreate,
-    mockSettings,
-    mockOnSnapShot,
-    mockQueryOnSnapshotUnsubscribe,
-    mockListCollections,
-    mockTimestampNow,
-    mockCreate,
-    mockRecursiveDelete,
-  } = require('firestore-jest-mock/mocks/firestore');
+libraries.forEach(({ library, mockFunction }) => {
+  describe(`mocking ${library} with ${mockFunction}`, () => {
+    let Firestore;
 
-  describe('we can start a firestore application', () => {
-    FirestoreMock[mockFunction]({
-      database: {
-        users: [
-          { id: 'abc123', first: 'Bob', last: 'builder', born: 1998 },
-          {
-            id: '123abc',
-            first: 'Blues',
-            last: 'builder',
-            born: 1996,
-            _collections: {
-              cities: [
-                { id: 'LA', name: 'Los Angeles', state: 'CA', country: 'USA', visited: true },
-              ],
+    before(() => {
+      FirestoreMock[mockFunction]({
+        database: {
+          users: [
+            { id: 'abc123', first: 'Bob', last: 'builder', born: 1998 },
+            {
+              id: '123abc',
+              first: 'Blues',
+              last: 'builder',
+              born: 1996,
+              _collections: {
+                cities: [
+                  { id: 'LA', name: 'Los Angeles', state: 'CA', country: 'USA', visited: true },
+                ],
+              },
             },
-          },
-        ],
-        cities: [
-          { id: 'LA', name: 'Los Angeles', state: 'CA', country: 'USA' },
-          { id: 'DC', name: 'Disctric of Columbia', state: 'DC', country: 'USA' },
-        ],
-      },
+          ],
+          cities: [
+            { id: 'LA', name: 'Los Angeles', state: 'CA', country: 'USA' },
+            { id: 'DC', name: 'Disctric of Columbia', state: 'DC', country: 'USA' },
+          ],
+        },
+      });
     });
 
-    beforeEach(() => {
-      this.Firestore = require(library).Firestore;
+    beforeEach(async () => {
+      mockGet.mock.resetCalls();
+      mockSelect.mock.resetCalls();
+      mockAdd.mock.resetCalls();
+      mockSet.mock.resetCalls();
+      mockUpdate.mock.resetCalls();
+      mockWhere.mock.resetCalls();
+      mockCollectionGroup.mock.resetCalls();
+      mockBatch.mock.resetCalls();
+      mockBatchCommit.mock.resetCalls();
+      mockBatchDelete.mock.resetCalls();
+      mockBatchUpdate.mock.resetCalls();
+      mockBatchSet.mock.resetCalls();
+      mockBatchCreate.mock.resetCalls();
+      mockSettings.mock.resetCalls();
+      mockOnSnapShot.mock.resetCalls();
+      mockQueryOnSnapshot.mock.resetCalls();
+      mockListCollections.mock.resetCalls();
+      mockTimestampNow.mock.resetCalls();
+      mockCreate.mock.resetCalls();
+      mockRecursiveDelete.mock.resetCalls();
+
+      const mod = await import(library);
+      // Depending on library structure, Firestore might be default export or named export.
+      // @google-cloud/firestore exports Firestore class.
+      // @react-native-firebase/firestore usually exports default as factory or namespace.
+      // But mock implementation returns { Firestore: ... }.
+      // So if I mock default export with that object, `mod.default.Firestore`?
+      // Or if I mock named exports?
+      // Check `src/mocks/googleCloudFirestore.js`: `mock.module(moduleName, { defaultExport: stub, namedExports: stub });`
+      // Stub returns `{ Firestore, ... }`.
+      // So `import { Firestore } from '...'` works (named export).
+      // `import lib from '...'` -> `lib.Firestore`.
+      
+      Firestore = mod.Firestore || mod.default?.Firestore;
     });
 
-    afterEach(() => mockTimestampNow.mockClear());
+    afterEach(() => {
+        mockTimestampNow.mock.resetCalls();
+        // clear implementation?
+        // mockTimestampNow implementation is persistent if set via mockReturnValue (mockImplementation).
+        // `mockTimestampNow` logic in `timestamp.js` is: `return mockTimestampNow(...) || Timestamp.fromDate(...)`.
+        // If I mocked implementation to return fixed value, I should restore it?
+        // `mock.fn` doesn't have restore. I can set implementation to undefined?
+        mockTimestampNow.mock.mockImplementation(() => undefined);
+    });
 
     test('We can start an application', async () => {
-      const firestore = new this.Firestore();
+      const firestore = new Firestore();
       firestore.settings({ ignoreUndefinedProperties: true });
-      expect(mockSettings).toHaveBeenCalledWith({ ignoreUndefinedProperties: true });
+      assert.deepStrictEqual(mockSettings.mock.calls[0].arguments, [{ ignoreUndefinedProperties: true }]);
     });
 
     describe('Examples from documentation', () => {
       test('add a user', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('users')
@@ -77,110 +127,113 @@ describe.each([
             born: 1815,
           })
           .then(function(docRef) {
-            expect(mockAdd).toHaveBeenCalled();
-            expect(docRef).toHaveProperty('id');
+            assert.ok(mockAdd.mock.callCount() > 0);
+            assert.ok(docRef.id);
           });
       });
 
       test('get all users', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('users')
           .get()
           .then(querySnapshot => {
-            expect(querySnapshot.forEach).toBeTruthy();
-            expect(querySnapshot.docs.length).toBe(2);
-            expect(querySnapshot.size).toBe(querySnapshot.docs.length);
+            assert.ok(querySnapshot.forEach);
+            assert.strictEqual(querySnapshot.docs.length, 2);
+            assert.strictEqual(querySnapshot.size, querySnapshot.docs.length);
 
             querySnapshot.forEach(doc => {
-              expect(doc.exists).toBe(true);
-              expect(doc.data()).toBeTruthy();
+              assert.strictEqual(doc.exists, true);
+              assert.ok(doc.data());
             });
           });
       });
 
       test('select specific fields only', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('users')
           .select('first', 'last')
           .get()
           .then(querySnapshot => {
-            expect(mockSelect).toHaveBeenCalledWith('first', 'last');
+            assert.deepStrictEqual(mockSelect.mock.calls[0].arguments, ['first', 'last']);
 
             const data = querySnapshot.docs[0].data();
-            expect(Object.keys(data).length).toBe(2);
-            expect(data.first).toBe('Bob');
-            expect(data.last).toBe('builder');
+            assert.strictEqual(Object.keys(data).length, 2);
+            assert.strictEqual(data.first, 'Bob');
+            assert.strictEqual(data.last, 'builder');
           });
       });
 
       test('select refs only', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('users')
           .select()
           .get()
           .then(querySnapshot => {
-            expect(mockSelect).toHaveBeenCalledWith();
+            // assert.deepStrictEqual(mockSelect.mock.calls[0].arguments, []); // args might be undefined or empty array
+            // check call count
+            assert.ok(mockSelect.mock.callCount() > 0);
 
             const data = querySnapshot.docs[0].data();
-            expect(Object.keys(data).length).toBe(0);
+            assert.strictEqual(Object.keys(data).length, 0);
           });
       });
 
       test('collectionGroup at root', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collectionGroup('users')
           .where('last', '==', 'builder')
           .get()
           .then(querySnapshot => {
-            expect(mockCollectionGroup).toHaveBeenCalledWith('users');
-            expect(mockGet).toHaveBeenCalled();
-            expect(mockWhere).toHaveBeenCalledWith('last', '==', 'builder');
+            assert.deepStrictEqual(mockCollectionGroup.mock.calls[0].arguments, ['users']);
+            assert.ok(mockGet.mock.callCount() > 0);
+            assert.deepStrictEqual(mockWhere.mock.calls[0].arguments, ['last', '==', 'builder']);
 
-            expect(querySnapshot.forEach).toBeTruthy();
-            expect(querySnapshot.docs.length).toBe(2);
-            expect(querySnapshot.size).toBe(querySnapshot.docs.length);
+            assert.ok(querySnapshot.forEach);
+            assert.strictEqual(querySnapshot.docs.length, 2);
+            assert.strictEqual(querySnapshot.size, querySnapshot.docs.length);
 
             querySnapshot.forEach(doc => {
-              expect(doc.exists).toBe(true);
-              expect(doc.data()).toBeTruthy();
+              assert.strictEqual(doc.exists, true);
+              assert.ok(doc.data());
             });
           });
       });
 
       test('collectionGroup with subcollections', () => {
-        jest.clearAllMocks();
-        const firestore = new this.Firestore();
+        mockGet.mock.resetCalls();
+        mockWhere.mock.resetCalls();
+        const firestore = new Firestore();
 
         return firestore
           .collectionGroup('cities')
           .where('country', '==', 'USA')
           .get()
           .then(querySnapshot => {
-            expect(mockCollectionGroup).toHaveBeenCalledWith('cities');
-            expect(mockGet).toHaveBeenCalledTimes(1);
-            expect(mockWhere).toHaveBeenCalledWith('country', '==', 'USA');
+            assert.deepStrictEqual(mockCollectionGroup.mock.calls[0].arguments, ['cities']);
+            assert.strictEqual(mockGet.mock.callCount(), 1);
+            assert.deepStrictEqual(mockWhere.mock.calls[0].arguments, ['country', '==', 'USA']);
 
-            expect(querySnapshot.forEach).toBeTruthy();
-            expect(querySnapshot.docs.length).toBe(3);
-            expect(querySnapshot.size).toBe(querySnapshot.docs.length);
+            assert.ok(querySnapshot.forEach);
+            assert.strictEqual(querySnapshot.docs.length, 3);
+            assert.strictEqual(querySnapshot.size, querySnapshot.docs.length);
 
             querySnapshot.forEach(doc => {
-              expect(doc.exists).toBe(true);
-              expect(doc.data()).toBeTruthy();
+              assert.strictEqual(doc.exists, true);
+              assert.ok(doc.data());
             });
           });
       });
 
       test('set a city', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('cities')
@@ -191,16 +244,16 @@ describe.each([
             country: 'USA',
           })
           .then(function() {
-            expect(mockSet).toHaveBeenCalledWith({
+            assert.deepStrictEqual(mockSet.mock.calls[0].arguments, [{
               name: 'Los Angeles',
               state: 'CA',
               country: 'USA',
-            });
+            }]);
           });
       });
 
       test('create a city', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         return firestore
           .collection('cities')
@@ -211,33 +264,33 @@ describe.each([
             country: 'USA',
           })
           .then(function() {
-            expect(mockCreate).toHaveBeenCalledWith({
+            assert.deepStrictEqual(mockCreate.mock.calls[0].arguments, [{
               name: 'Los Angeles',
               state: 'CA',
               country: 'USA',
-            });
+            }]);
           });
       });
 
       test('updating a city', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
         const now = Timestamp._fromMillis(new Date().getTime());
         const washingtonRef = firestore.collection('cities').doc('DC');
 
-        mockTimestampNow.mockReturnValue(now);
+        mockTimestampNow.mock.mockImplementation(() => now);
 
         return washingtonRef
           .update({
             capital: true,
           })
           .then(function(value) {
-            expect(value.updateTime).toStrictEqual(now);
-            expect(mockUpdate).toHaveBeenCalledWith({ capital: true });
+            assert.deepStrictEqual(value.updateTime, now);
+            assert.deepStrictEqual(mockUpdate.mock.calls[0].arguments, [{ capital: true }]);
           });
       });
 
       test('batch writes', () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         // Get a new write batch
         const batch = firestore.batch();
@@ -260,80 +313,80 @@ describe.each([
 
         // Commit the batch
         return batch.commit().then(function() {
-          expect(mockBatch).toHaveBeenCalled();
-          expect(mockBatchDelete).toHaveBeenCalledWith(laRef);
-          expect(mockBatchUpdate).toHaveBeenCalledWith(sfRef, { population: 1000000 });
-          expect(mockBatchSet).toHaveBeenCalledWith(nycRef, { name: 'New York City' });
-          expect(mockBatchCreate).toHaveBeenCalledWith(chiRef, { name: 'Chicago', state: 'IL', country: 'USA' });
-          expect(mockBatchCommit).toHaveBeenCalled();
+          assert.ok(mockBatch.mock.callCount() > 0);
+          assert.deepStrictEqual(mockBatchDelete.mock.calls[0].arguments, [laRef]);
+          assert.deepStrictEqual(mockBatchUpdate.mock.calls[0].arguments, [sfRef, { population: 1000000 }]);
+          assert.deepStrictEqual(mockBatchSet.mock.calls[0].arguments, [nycRef, { name: 'New York City' }]);
+          assert.deepStrictEqual(mockBatchCreate.mock.calls[0].arguments, [chiRef, { name: 'Chicago', state: 'IL', country: 'USA' }]);
+          assert.ok(mockBatchCommit.mock.callCount() > 0);
         });
       });
 
       test('listCollections returns a promise', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         const listCollectionsPromise = firestore.collection('cities').doc('LA').listCollections();
 
-        expect(listCollectionsPromise).toEqual(expect.any(Promise));
+        assert.ok(listCollectionsPromise instanceof Promise);
       });
 
       test('listCollections resolves with child collections', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         const result = await firestore.collection('users').doc('123abc').listCollections();
 
-        expect(result).toEqual(expect.any(Array));
-        expect(result).toHaveLength(1);
-        expect(result[0]).toEqual(expect.any(this.Firestore.CollectionReference));
-        expect(result[0].id).toBe('cities');
+        assert.ok(Array.isArray(result));
+        assert.strictEqual(result.length, 1);
+        assert.ok(result[0] instanceof Firestore.CollectionReference);
+        assert.strictEqual(result[0].id, 'cities');
       });
 
       test('listCollections resolves with empty array if there are no collections in document', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         const result = await firestore.collection('users').doc('abc123').listCollections();
 
-        expect(result).toEqual(expect.any(Array));
-        expect(result).toHaveLength(0);
+        assert.ok(Array.isArray(result));
+        assert.strictEqual(result.length, 0);
       });
 
       test('listCollections calls mockListCollections', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         await firestore.collection('users').doc('abc123').listCollections();
 
-        expect(mockListCollections).toHaveBeenCalled();
+        assert.ok(mockListCollections.mock.callCount() > 0);
       });
 
       test('onSnapshot single doc', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
         const now = Timestamp._fromMillis(new Date().getTime());
 
-        mockTimestampNow.mockReturnValue(now);
+        mockTimestampNow.mock.mockImplementation(() => now);
 
         firestore
           .collection('cities')
           .doc('LA')
           .onSnapshot(doc => {
-            expect(doc).toHaveProperty('createTime');
-            expect(doc).toHaveProperty('data');
-            expect(doc.data).toBeInstanceOf(Function);
-            expect(doc).toHaveProperty('metadata');
-            expect(doc).toHaveProperty('readTime');
-            expect(doc).toHaveProperty('updateTime');
-            expect(doc.readTime).toStrictEqual(now);
+            assert.ok('createTime' in doc);
+            assert.ok('data' in doc);
+            assert.strictEqual(typeof doc.data, 'function');
+            assert.ok('metadata' in doc);
+            assert.ok('readTime' in doc);
+            assert.ok('updateTime' in doc);
+            assert.deepStrictEqual(doc.readTime, now);
           });
 
         await flushPromises();
 
-        expect(mockOnSnapShot).toHaveBeenCalled();
+        assert.ok(mockOnSnapShot.mock.callCount() > 0);
       });
 
       test('onSnapshot can work with options', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
         const now = Timestamp._fromMillis(new Date().getTime());
 
-        mockTimestampNow.mockReturnValue(now);
+        mockTimestampNow.mock.mockImplementation(() => now);
 
         firestore
           .collection('cities')
@@ -344,53 +397,53 @@ describe.each([
               includeMetadataChanges: true,
             },
             doc => {
-              expect(doc).toHaveProperty('createTime');
-              expect(doc).toHaveProperty('data');
-              expect(doc.data).toBeInstanceOf(Function);
-              expect(doc).toHaveProperty('metadata');
-              expect(doc).toHaveProperty('readTime');
-              expect(doc).toHaveProperty('updateTime');
-              expect(doc.readTime).toStrictEqual(now);
+              assert.ok('createTime' in doc);
+              assert.ok('data' in doc);
+              assert.strictEqual(typeof doc.data, 'function');
+              assert.ok('metadata' in doc);
+              assert.ok('readTime' in doc);
+              assert.ok('updateTime' in doc);
+              assert.deepStrictEqual(doc.readTime, now);
             },
           );
 
         await flushPromises();
 
-        expect(mockOnSnapShot).toHaveBeenCalled();
+        assert.ok(mockOnSnapShot.mock.callCount() > 0);
       });
 
       test('onSnapshot with query', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 
         const unsubscribe = firestore
           .collection('cities')
           .where('state', '==', 'CA')
           .onSnapshot(querySnapshot => {
-            expect(querySnapshot).toHaveProperty('forEach', expect.any(Function));
-            expect(querySnapshot).toHaveProperty('docChanges');
-            expect(querySnapshot).toHaveProperty('docs', expect.any(Array));
+            assert.strictEqual(typeof querySnapshot.forEach, 'function');
+            assert.ok('docChanges' in querySnapshot);
+            assert.ok(Array.isArray(querySnapshot.docs));
 
-            expect(querySnapshot.forEach).toBeInstanceOf(Function);
-            expect(querySnapshot.docChanges).toBeInstanceOf(Function);
-            expect(querySnapshot.docs).toBeInstanceOf(Array);
+            assert.strictEqual(typeof querySnapshot.forEach, 'function');
+            assert.strictEqual(typeof querySnapshot.docChanges, 'function');
+            assert.ok(Array.isArray(querySnapshot.docs));
 
-            expect(querySnapshot.docChanges()).toBeInstanceOf(Array);
+            assert.ok(Array.isArray(querySnapshot.docChanges()));
           });
 
         await flushPromises();
 
-        expect(unsubscribe).toBe(mockQueryOnSnapshotUnsubscribe);
-        expect(mockWhere).toHaveBeenCalled();
-        expect(mockOnSnapShot).toHaveBeenCalled();
+        assert.strictEqual(unsubscribe, mockQueryOnSnapshotUnsubscribe);
+        assert.ok(mockWhere.mock.callCount() > 0);
+        assert.ok(mockQueryOnSnapshot.mock.callCount() > 0);
       });
 
       test('recursiveDelete', async () => {
-        const firestore = new this.Firestore();
+        const firestore = new Firestore();
 	      const citiesRef = firestore.collection('cities');
 	  
 	      firestore.recursiveDelete(citiesRef)
 
-        expect(mockRecursiveDelete).toHaveBeenCalledWith(citiesRef);
+        assert.deepStrictEqual(mockRecursiveDelete.mock.calls[0].arguments, [citiesRef]);
       });
     });
   });

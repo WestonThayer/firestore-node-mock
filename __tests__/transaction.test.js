@@ -1,5 +1,8 @@
-const { mockFirebase, FakeFirestore } = require('firestore-jest-mock');
-const {
+import { describe, test, beforeEach } from 'node:test';
+import { mock } from 'node:test';
+import assert from 'node:assert';
+import { mockFirebase, FakeFirestore } from '../index.js';
+import {
   mockRunTransaction,
   mockDelete,
   mockDeleteTransaction,
@@ -12,69 +15,77 @@ const {
   mockGetAll,
   mockGetAllTransaction,
   mockCreateTransaction,
-} = require('firestore-jest-mock/mocks/firestore');
+} from '../mocks/firestore.js';
+
+mockFirebase({
+  database: {},
+});
+const { default: firebase } = await import('firebase');
+firebase.initializeApp({
+  apiKey: '### FIREBASE API KEY ###',
+  authDomain: '### FIREBASE AUTH DOMAIN ###',
+  projectId: '### CLOUD FIRESTORE PROJECT ID ###',
+});
+const db = firebase.firestore();
 
 describe('Transactions', () => {
-  mockFirebase({
-    database: {},
-  });
-  const firebase = require('firebase');
-  firebase.initializeApp({
-    apiKey: '### FIREBASE API KEY ###',
-    authDomain: '### FIREBASE AUTH DOMAIN ###',
-    projectId: '### CLOUD FIRESTORE PROJECT ID ###',
-  });
-  const db = firebase.firestore();
-
   beforeEach(() => {
-    jest.resetModules();
-    jest.clearAllMocks();
+    mockRunTransaction.mock.resetCalls();
+    mockDelete.mock.resetCalls();
+    mockDeleteTransaction.mock.resetCalls();
+    mockUpdate.mock.resetCalls();
+    mockUpdateTransaction.mock.resetCalls();
+    mockSet.mock.resetCalls();
+    mockSetTransaction.mock.resetCalls();
+    mockGet.mock.resetCalls();
+    mockGetTransaction.mock.resetCalls();
+    mockGetAll.mock.resetCalls();
+    mockGetAllTransaction.mock.resetCalls();
+    mockCreateTransaction.mock.resetCalls();
   });
 
   test('it returns a Promise', () => {
     const result = db.runTransaction(async () => {});
 
-    expect(result).toBeInstanceOf(Promise);
-    expect(mockRunTransaction).toHaveBeenCalled();
+    assert.ok(result instanceof Promise);
+    assert.ok(mockRunTransaction.mock.callCount() > 0);
   });
 
   test('it returns the same value returned by the transaction callback', async () => {
     const result = await db.runTransaction(() => 'Success!');
-    expect(result).toBe('Success!');
+    assert.strictEqual(result, 'Success!');
   });
 
   test('it provides a Transaction object', () => {
-    const runner = jest.fn().mockReturnValue(Promise.resolve());
+    const runner = mock.fn(() => Promise.resolve());
     const result = db.runTransaction(runner);
 
-    expect(result).toBeInstanceOf(Promise);
-    expect(runner).toHaveBeenCalled();
-    expect(runner.mock.calls[0][0]).toBeInstanceOf(FakeFirestore.Transaction);
+    assert.ok(result instanceof Promise);
+    assert.ok(runner.mock.callCount() > 0);
+    assert.ok(runner.mock.calls[0].arguments[0] instanceof FakeFirestore.Transaction);
   });
 
   test('mockGet is accessible', async () => {
-    expect.assertions(7);
-    expect(mockGetTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockGetTransaction.mock.callCount(), 0);
     const ref = db.collection('some').doc('body');
 
     await db.runTransaction(async transaction => {
       // `get` should return a promise
       const result = transaction.get(ref);
-      expect(result).toBeInstanceOf(Promise);
+      assert.ok(result instanceof Promise);
       const doc = await result;
 
       // Calling `get` on transaction no longer calls `get` on `ref`
-      expect(mockGet).not.toHaveBeenCalled();
-      expect(doc).toHaveProperty('id', 'body');
-      expect(doc).toHaveProperty('exists', false);
-      expect(doc.data()).toBeUndefined();
+      assert.strictEqual(mockGet.mock.callCount(), 0);
+      assert.strictEqual(doc.id, 'body');
+      assert.strictEqual(doc.exists, false);
+      assert.strictEqual(doc.data(), undefined);
     });
-    expect(mockGetTransaction).toHaveBeenCalled();
+    assert.ok(mockGetTransaction.mock.callCount() > 0);
   });
 
   test('mockSet is accessible', async () => {
-    expect.assertions(4);
-    expect(mockSetTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockSetTransaction.mock.callCount(), 0);
     const ref = db.collection('some').doc('body');
 
     await db.runTransaction(transaction => {
@@ -82,44 +93,41 @@ describe('Transactions', () => {
       const options = { merge: true };
       const result = transaction.set(ref, newData, options);
 
-      expect(result).toBeInstanceOf(FakeFirestore.Transaction);
-      expect(mockSet).toHaveBeenCalledWith(newData, options);
+      assert.ok(result instanceof FakeFirestore.Transaction);
+      assert.deepStrictEqual(mockSet.mock.calls[0].arguments, [newData, options]);
     });
-    expect(mockSetTransaction).toHaveBeenCalled();
+    assert.ok(mockSetTransaction.mock.callCount() > 0);
   });
 
   test('mockUpdate is accessible', async () => {
-    expect.assertions(4);
-    expect(mockUpdateTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockUpdateTransaction.mock.callCount(), 0);
     const ref = db.collection('some').doc('body');
 
     await db.runTransaction(transaction => {
       const newData = { foo: 'bar' };
       const result = transaction.update(ref, newData);
 
-      expect(result).toBeInstanceOf(FakeFirestore.Transaction);
-      expect(mockUpdate).toHaveBeenCalledWith(newData);
+      assert.ok(result instanceof FakeFirestore.Transaction);
+      assert.deepStrictEqual(mockUpdate.mock.calls[0].arguments, [newData]);
     });
-    expect(mockUpdateTransaction).toHaveBeenCalled();
+    assert.ok(mockUpdateTransaction.mock.callCount() > 0);
   });
 
   test('mockDelete is accessible', async () => {
-    expect.assertions(4);
-    expect(mockDeleteTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockDeleteTransaction.mock.callCount(), 0);
     const ref = db.collection('some').doc('body');
 
     await db.runTransaction(async transaction => {
       const result = transaction.delete(ref);
 
-      expect(result).toBeInstanceOf(FakeFirestore.Transaction);
-      expect(mockDelete).toHaveBeenCalled();
+      assert.ok(result instanceof FakeFirestore.Transaction);
+      assert.ok(mockDelete.mock.callCount() > 0);
     });
-    expect(mockDeleteTransaction).toHaveBeenCalled();
+    assert.ok(mockDeleteTransaction.mock.callCount() > 0);
   });
 
   test('mockGetAll is accessible', async () => {
-    expect.assertions(4);
-    expect(mockGetAllTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockGetAllTransaction.mock.callCount(), 0);
     const ref1 = db.collection('some').doc('body');
     const ref2 = ref1.collection('once').doc('told');
 
@@ -127,15 +135,14 @@ describe('Transactions', () => {
       // FIXME: getAll is not defined on the client library, so this is a shot in the dark
       const result = await transaction.getAll(ref1, ref2);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(mockGetAll).toHaveBeenCalled();
+      assert.ok(result instanceof Array);
+      assert.ok(mockGetAll.mock.callCount() > 0);
     });
-    expect(mockGetAllTransaction).toHaveBeenCalled();
+    assert.ok(mockGetAllTransaction.mock.callCount() > 0);
   });
 
   test('mockCreateTransaction is accessible', async () => {
-    expect.assertions(2);
-    expect(mockCreateTransaction).not.toHaveBeenCalled();
+    assert.strictEqual(mockCreateTransaction.mock.callCount(), 0);
     // Example from documentation
     // https://googleapis.dev/nodejs/firestore/latest/Transaction.html#create-examples
 
@@ -148,6 +155,6 @@ describe('Transactions', () => {
       });
     });
 
-    expect(mockCreateTransaction).toHaveBeenCalled();
+    assert.ok(mockCreateTransaction.mock.callCount() > 0);
   });
 });

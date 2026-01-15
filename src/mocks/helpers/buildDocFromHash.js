@@ -1,7 +1,8 @@
-const timestamp = require('../timestamp');
-const merge = require('lodash/merge');
+import * as timestamp from '../timestamp.js';
+import pkg from 'lodash';
+const { merge } = pkg;
 
-module.exports = function buildDocFromHash(hash = {}, id = 'abc123', selectFields = undefined) {
+export default function buildDocFromHash(hash = {}, id = 'abc123', selectFields = undefined) {
   const exists = !!hash || false;
   return {
     createTime: (hash && hash._createTime) || timestamp.Timestamp.now(),

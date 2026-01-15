@@ -11,7 +11,7 @@ export const mockCreateCustomToken = mock.fn();
 export const mockSetCustomUserClaims = mock.fn();
 export const mockSignOut = mock.fn();
 export const mockUseEmulator = mock.fn();
-/
+
 export class FakeAuth {
   constructor(currentUser = {}) {
     currentUser.sendEmailVerification = mockSendVerificationEmail;

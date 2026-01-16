@@ -120,4 +120,13 @@ describe('database mutations', () => {
     });
     assert.notStrictEqual(newDoc2.id, newDoc1.id);
   });
+
+  test('it can delete from collection', async () => {
+    const col = db().collection('characters');
+    const homerDoc = col.doc('homer');
+    await homerDoc.delete();
+
+    const test = await homerDoc.get();
+    assert.strictEqual(test.exists, false);
+  });
 });

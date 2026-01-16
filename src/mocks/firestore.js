@@ -68,8 +68,9 @@ export class FakeFirestore {
     mockBatch(...arguments);
     return {
       _ref: this,
-      delete() {
+      delete(doc) {
         mockBatchDelete(...arguments);
+        this._ref._deleteData(doc.path);
         return this;
       },
       set(doc, data, setOptions = {}) {
@@ -239,6 +240,46 @@ export class FakeFirestore {
     };
   }
 
+  _deleteData(path) {
+    // Do not update unless explicity set to mutable.
+    if (!this.options.mutable) {
+      return;
+    }
+
+    const pathArray = path.replace(/^\/+/, '').split('/');
+
+    // Must be document-level, so even-numbered elements
+    if (pathArray.length % 2 !== 0) {
+      throw new Error(
+        `FakeFirebaseError: Invalid document reference. Document references must have an even number of segments, but ${path} has ${pathArray.length}`,
+      );
+    }
+
+    // The parent entry is the id of the document
+    const docId = pathArray.pop();
+    // Find the parent of docId.
+    const parent = pathArray.reduce((last, entry, index) => {
+      if (!last) return null;
+      const isCollection = index % 2 === 0;
+      if (isCollection) {
+        return last[entry];
+      } else {
+        const existingDoc = last.find(doc => doc.id === entry);
+        if (existingDoc) {
+          return existingDoc._collections;
+        }
+        return null;
+      }
+    }, this.database);
+
+    if (parent) {
+      const oldIndex = parent.findIndex(doc => doc.id === docId);
+      if (oldIndex >= 0) {
+        parent.splice(oldIndex, 1);
+      }
+    }
+  }
+
   recursiveDelete(ref, bulkWriter) {
     mockRecursiveDelete(...arguments);
   	return Promise.resolve();
@@ -289,6 +330,7 @@ FakeFirestore.DocumentReference = class DocumentReference {
 
   delete() {
     mockDelete(...arguments);
+    this.firestore._deleteData(this.path);
     return Promise.resolve();
   }
 

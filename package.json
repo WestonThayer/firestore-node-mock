@@ -1,6 +1,6 @@
 {
   "name": "firestore-node-mock",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Helper for mocking Google Cloud Firestore with Node.js test runner",
   "author": "",
   "license": "MIT",
